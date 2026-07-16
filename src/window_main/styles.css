@@ -1,0 +1,18 @@
+#root {
+  height: 100vh ;
+
+  position: absolute ;
+  top: 0 ;
+  left: 0 ;
+  right: 0 ;
+  bottom: 0 ;
+
+  background-color: rgb(253, 253, 253) ;
+}
+
+body {
+  margin: 0 ;
+  padding: 0 ;
+  overflow: hidden ;
+  user-select: none ;
+}
