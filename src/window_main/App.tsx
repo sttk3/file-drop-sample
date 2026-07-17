@@ -33,9 +33,9 @@ export const App = () => {
 
     let unlistenList: Array<UnlistenFn> = [] ;
     (async () => {
-      // イベント'ts_on_open_files'に応じた処理を登録する
+      // イベント'ts_on_open_file'に応じた処理を登録する
       unlistenList.push(
-        await windowMain.listen<string>('ts_on_open_files', async (event) => {
+        await windowMain.listen<string>('ts_on_open_file', async (event) => {
           await showDialog(event.payload) ;
         })
       ) ;
@@ -50,7 +50,7 @@ export const App = () => {
         const targetPath: string = filesToOpen[0] ;
         await setStateFilesToOpen([]) ;
 
-        // イベント'ts_on_open_files'のときと同じ処理を実行する
+        // イベント'ts_on_open_file'のときと同じ処理を実行する
         await showDialog(targetPath) ;
       }
     })() ;

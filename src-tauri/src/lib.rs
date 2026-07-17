@@ -86,8 +86,8 @@ fn handle_files(app_handle: &AppHandle, files: &Vec<PathBuf>) -> anyhow::Result<
     // open対象のファイルをstateに保存しておく
     let _ = set_state_files_to_open(state, target_files) ;
 
-    // フロントエンドのウインドウ'main'にイベント'ts_on_open_files'を送信する
-    app_handle.emit_to("main", "ts_on_open_files", file_path)? ;
+    // フロントエンドのウインドウ'main'にイベント'ts_on_open_file'を送信する
+    app_handle.emit_to("main", "ts_on_open_file", file_path)? ;
   }
 
   return Ok(()) ;
