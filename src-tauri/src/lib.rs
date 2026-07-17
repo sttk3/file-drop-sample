@@ -22,6 +22,34 @@ use menu::create_menu ;
 mod path ;
 use path::get_extension ;
 
+/// env::args()などからドロップされたファイルを取得する
+///
+/// ### Arguments
+/// * `args` - 対象のイテレータ
+/// 
+/// ### Returns
+/// PathBufの配列
+///
+#[cfg(target_os = "windows")]
+fn collect_files<I>(args: I) -> Vec<PathBuf>
+where
+  I: IntoIterator<Item = String>,
+{
+  let res: Vec<PathBuf> = args.into_iter()
+    .skip(1)
+    .map(PathBuf::from)
+    .collect()
+  ;
+
+  return res ;
+}
+
+/// ドロップされたファイルをフロントエンドの処理に送る
+///
+/// ### Arguments
+/// * `app_handle` - tauri::AppHandle
+/// * `files` - 処理対象のPathBufの配列
+///
 fn handle_files(app_handle: &AppHandle, files: &Vec<PathBuf>) -> anyhow::Result<()> {
   if files.is_empty() {return Ok(()) ;}
 
@@ -62,12 +90,7 @@ pub fn run() {
       // Windowsですでにアプリが起動中にファイルを開く処理
       #[cfg(target_os = "windows")]
       {
-        let files: Vec<PathBuf> = argv.into_iter()
-          .skip(1)
-          .map(PathBuf::from)
-          .collect()
-        ;
-
+        let files: Vec<PathBuf> = collect_files(argv) ;
         let _ = handle_files(app_handle, &files) ;
       }
     }))
@@ -89,19 +112,15 @@ pub fn run() {
       let package_info: &tauri::PackageInfo = app.package_info() ;
       window_main
         .set_title(&format!("{} {}", package_info.name, package_info.version))
-        .expect("Failed to set window title") ;
+        .expect("Failed to set window title")
+      ;
 
       // Windowsでアプリ初回起動時にファイルを開く処理
       #[cfg(target_os = "windows")]
       {
-        let files: Vec<PathBuf> = env::args()
-          .skip(1)
-          .map(PathBuf::from)
-          .collect()
-        ;
-
+        let files: Vec<PathBuf> = collect_files(env::args()) ;
         if !files.is_empty() {
-          let _ = handle_files(app.handle(), &files) ;
+          let _ = handle_files(&app_handle, &files) ;
         }
       }
 
@@ -112,7 +131,7 @@ pub fn run() {
     .run(
       // macOSでファイルオープンイベントを処理する
       #[allow(unused_variables)]
-      |app, event| {
+      |app_handle, event| {
         #[cfg(target_os = "macos")]
         if let tauri::RunEvent::Opened { urls } = event {
           let files: Vec<PathBuf> = urls
@@ -121,8 +140,7 @@ pub fn run() {
             .collect()
           ;
 
-          let app_handle = app.clone() ;
-          let _ = handle_files(&app_handle, &files) ;
+          let _ = handle_files(app_handle, &files) ;
         }
       }, 
     )
