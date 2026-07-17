@@ -1,7 +1,10 @@
 // std
 use std::env ;
 use std::sync::Mutex ;
-use std::path::PathBuf ;
+use std::path::{
+  Path, 
+  PathBuf, 
+} ;
 
 // tauri
 use tauri::{
@@ -19,8 +22,6 @@ use app_state::{
 } ;
 mod menu ;
 use menu::create_menu ;
-mod path ;
-use path::get_extension ;
 
 /// env::args()などからドロップされたファイルを取得する
 ///
@@ -39,6 +40,20 @@ where
     .skip(1)
     .map(PathBuf::from)
     .collect()
+  ;
+
+  return res ;
+}
+
+/// ファイルパスから拡張子を取り出す
+///
+/// ### Arguments
+/// * `filepath` - 対象のファイルパス
+/// 
+pub fn get_extension<P: AsRef<Path>>(filepath: P) -> String {
+  let res = filepath.as_ref().extension()
+    .map(|ext| ext.to_string_lossy().into_owned())
+    .unwrap_or_else(|| "".to_string())
   ;
 
   return res ;
@@ -87,7 +102,7 @@ pub fn run() {
       #[cfg(target_os = "macos")]
       let _ = (&app_handle, &argv) ;
 
-      // Windowsですでにアプリが起動中にファイルを開く処理
+      // Windowsですでにアプリが起動中にargsを処理する部分
       #[cfg(target_os = "windows")]
       {
         let files: Vec<PathBuf> = collect_files(argv) ;
@@ -101,7 +116,7 @@ pub fn run() {
     .setup(|app| {
       let app_handle: AppHandle = app.handle().clone() ;
 
-      // stateを作る
+      // 起動時stateを作る
       app.manage(Mutex::new(AppState::default())) ;
 
       // メニューを作る
@@ -115,13 +130,11 @@ pub fn run() {
         .expect("Failed to set window title")
       ;
 
-      // Windowsでアプリ初回起動時にファイルを開く処理
+      // Windowsでアプリ初回起動時にargsを処理する部分
       #[cfg(target_os = "windows")]
       {
         let files: Vec<PathBuf> = collect_files(env::args()) ;
-        if !files.is_empty() {
-          let _ = handle_files(&app_handle, &files) ;
-        }
+        let _ = handle_files(&app_handle, &files) ;
       }
 
       Ok(())
