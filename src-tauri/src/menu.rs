@@ -1,18 +1,18 @@
 // tauri
-use tauri::menu::{MenuBuilder, SubmenuBuilder} ;
+use tauri::menu::{MenuBuilder, SubmenuBuilder, PredefinedMenuItem} ;
 use tauri::AppHandle ;
 
 #[cfg(target_os = "macos")]
-use tauri::menu::{AboutMetadataBuilder, PredefinedMenuItem} ;
+use tauri::menu::AboutMetadataBuilder ;
 
 pub fn create_menu(app_handle: &AppHandle) -> anyhow::Result<()> {
-  let info = app_handle.package_info() ;
-  let app_name: &String = &info.name ;
-
   let menu ;
 
   #[cfg(target_os = "macos")]
   {
+    let info = app_handle.package_info() ;
+    let app_name: &String = &info.name ;
+
     // Apple
     let submenu_app = SubmenuBuilder::with_id(app_handle, "app", &app_name)
       .items(&[

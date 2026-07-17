@@ -1,4 +1,5 @@
 // std
+use std::env ;
 use std::sync::Mutex ;
 use std::path::PathBuf ;
 
@@ -53,10 +54,10 @@ fn handle_files(app_handle: &AppHandle, files: &Vec<PathBuf>) -> anyhow::Result<
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_dialog::init())
-    .plugin(tauri_plugin_single_instance::init(|app_handle, argv, cwd| {
+    .plugin(tauri_plugin_single_instance::init(|app_handle, argv, _cwd| {
       // macOSでは使わないので警告を抑止する
       #[cfg(target_os = "macos")]
-      let _ = (&app_handle, &argv, &cwd) ;
+      let _ = (&app_handle, &argv) ;
 
       // Windowsですでにアプリが起動中にファイルを開く処理
       #[cfg(target_os = "windows")]
@@ -77,6 +78,9 @@ pub fn run() {
     .setup(|app| {
       let app_handle: AppHandle = app.handle().clone() ;
 
+      // stateを作る
+      app.manage(Mutex::new(AppState::default())) ;
+
       // メニューを作る
       create_menu(&app_handle)? ;
 
@@ -86,6 +90,20 @@ pub fn run() {
       window_main
         .set_title(&format!("{} {}", package_info.name, package_info.version))
         .expect("Failed to set window title") ;
+
+      // Windowsでアプリ初回起動時にファイルを開く処理
+      #[cfg(target_os = "windows")]
+      {
+        let files: Vec<PathBuf> = env::args()
+          .skip(1)
+          .map(PathBuf::from)
+          .collect()
+        ;
+
+        if !files.is_empty() {
+          let _ = handle_files(app.handle(), &files) ;
+        }
+      }
 
       Ok(())
     })
@@ -102,8 +120,6 @@ pub fn run() {
             .filter_map(|url| url.to_file_path().ok())
             .collect()
           ;
-
-          println!("{:?}", &files) ;
 
           let app_handle = app.clone() ;
           let _ = handle_files(&app_handle, &files) ;
