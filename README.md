@@ -1,4 +1,4 @@
-# localize-dialog-sample Tauri
+# file-drop-sample Tauri
 
 macOSのTauri 2にて、アプリアイコンへのファイルドロップに対応させる解説用サンプルプロジェクトです。
 
